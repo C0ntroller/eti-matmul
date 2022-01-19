@@ -12,6 +12,21 @@ void matmul(double* A, double* B, double* C, int n){
                 C[i*n + j] += A[i*n + k] * B[k*n + j];
 }
 
+void matmul_swapped_loops(double* A, double* B, double* C, int n){
+    for (int i = 0; i < n; i++)
+        for (int k = 0; k < n; k++)
+            for (int j = 0; j < n; j++)
+                C[i*n + j] += A[i*n + k] * B[k*n + j];
+}
+
+void matmul_constants(double* A, double* B, double* C, int n){
+    for (int i = 0; i < n; i++)
+        for (int k = 0; k < n; k++)
+            double temp_a = A[i*n + k]
+            for (int j = 0; j < n; j++)
+                C[i*n + j] += temp_a * B[k*n + j];
+}
+
 int main(int args, char* argsv[]) {
     if (args != 2) {
         printf("Please specify matrix size.\n");
