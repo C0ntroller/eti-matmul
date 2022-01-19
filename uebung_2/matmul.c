@@ -206,6 +206,7 @@ int main(int args, char *argsv[]) {
         matmul_swapped_loops(ptr_A, ptr_B, ptr_C, n);
         gettimeofday(&tv2, NULL);
         runtimes[1][m] = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
+        printf("%f", ptr_C[0]);
         if(m==0 && n==16){
             if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 1: Ergebnis korrekt\n");
             else printf("Optimierung 1: Ergebnis nicht korrekt\n");
@@ -217,6 +218,7 @@ int main(int args, char *argsv[]) {
         matmul_unrolled_loops(ptr_A, ptr_B, ptr_C, n);
         gettimeofday(&tv2, NULL);
         runtimes[2][m] = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
+        printf("%f", ptr_C[0]);
         if(m==0 && n==16){
             if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 2: Ergebnis korrekt\n");
             else printf("Optimierung 2: Ergebnis nicht korrekt\n");
@@ -228,6 +230,7 @@ int main(int args, char *argsv[]) {
         matmul_blocking(ptr_A, ptr_B, ptr_C, n);
         gettimeofday(&tv2, NULL);
         runtimes[3][m] = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
+        printf("%f", ptr_C[0]);
         if(m==0 && n==16){
             if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 3: Ergebnis korrekt\n");
             else printf("Optimierung 3: Ergebnis nicht korrekt\n");
@@ -239,6 +242,7 @@ int main(int args, char *argsv[]) {
         matmul_pointer(ptr_A, ptr_B, ptr_C, n);
         gettimeofday(&tv2, NULL);
         runtimes[3][m] = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
+        printf("%f", ptr_C[0]);
         if(m==0 && n==16){
             if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 4: Ergebnis korrekt\n");
             else printf("Optimierung 4: Ergebnis nicht korrekt\n");
@@ -250,13 +254,15 @@ int main(int args, char *argsv[]) {
         matmul_constants(ptr_A, ptr_B, ptr_C, n);
         gettimeofday(&tv2, NULL);
         runtimes[4][m] = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
+        printf("%f", ptr_C[0]);
         if(m==0 && n==16){
             if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 5: Ergebnis korrekt\n");
             else printf("Optimierung 5: Ergebnis nicht korrekt\n");
         }
 
     }
-
+    
+    printf("\n");
     for (int i = 0; i < 5; i++) {
         printf("Variante %i:   ", i);
         for (int j = 0; j < 10; j++) {
