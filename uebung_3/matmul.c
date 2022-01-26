@@ -23,14 +23,12 @@ void matmul_mpi(double* A, double* B, double* C, int rows, int n) {
 }
 
 int results_correct(double* A, double* B, int n){
-    int correct = 1;
     for(int i = 0; i<n*n; i++){
         if(*(A+i) != *(B+i)){
-            correct = 0;
-            break;
+            return 0;
         }
     }
-    return correct;
+    return 1;
 }
 
 
@@ -50,13 +48,17 @@ int main(int args, char *argsv[]) {
     srand(time(NULL));
 
     int rows = (int) n / size;
-    const int bfrsize = n * rows;
+    int bfrsize = n * rows;
+
+    int* slices = (int *) malloc(size * sizeof(int));
+    for (int i = 0; i < size; i++) {
+        slices[i] = bfrsize;
+    } 
 
     int* offsets = (int *) malloc(size * sizeof(int));
     for (int i = 0; i < size; i++) {
         offsets[i] = bfrsize * i;
     }
-    const int* c_offset_pointer = offsets;
 
     double *ptr_A, *ptr_B, *ptr_C, *ptr_A_tile, *ptr_B_tile, *ptr_C_result, *ptr_C_check;
 
@@ -75,13 +77,13 @@ int main(int args, char *argsv[]) {
             }
         }
     }
-
+    
     ptr_A_tile = (double *) malloc(bfrsize * sizeof(double));
     ptr_B_tile = (double *) malloc(bfrsize * sizeof(double));
     ptr_C_result = (double *) malloc(bfrsize * sizeof(double));
 
-    MPI_Scatterv(ptr_A, &bfrsize, c_offset_pointer, MPI_DOUBLE, ptr_A_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(ptr_B, &bfrsize, c_offset_pointer, MPI_DOUBLE, ptr_B_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(ptr_A, slices, offsets, MPI_DOUBLE, ptr_A_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(ptr_B, slices, offsets, MPI_DOUBLE, ptr_B_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     double runtime;
     struct timeval tv1, tv2;
@@ -92,7 +94,7 @@ int main(int args, char *argsv[]) {
         MPI_Barrier(MPI_COMM_WORLD);
         gettimeofday(&tv1, NULL);
         matmul_mpi(ptr_A_tile, ptr_B_tile, ptr_C_result, rows, n);
-        MPI_Gatherv(ptr_C_result, bfrsize, MPI_DOUBLE, ptr_C, &bfrsize, c_offset_pointer, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Gatherv(ptr_C_result, bfrsize, MPI_DOUBLE, ptr_C, slices, offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         if(rank == 0 && n - (rows * size) != 0) {
             matmul_mpi(ptr_A + (rows * size), ptr_B + (rows * size), ptr_C + (rows * size), n - (rows * size), n);
         }
