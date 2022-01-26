@@ -60,11 +60,11 @@ int main(int args, char *argsv[]) {
         offsets[i] = bfrsize * i;
     }
 
-    double *ptr_A, *ptr_B, *ptr_C, *ptr_A_tile, *ptr_B_tile, *ptr_C_result, *ptr_C_check;
+    double *ptr_A, *ptr_B, *ptr_C, *ptr_A_tile, *ptr_C_result, *ptr_C_check;
+    ptr_B = (double *) malloc(n * n * sizeof(double));
 
     if (rank == 0) {
         ptr_A = (double *) malloc(n * n * sizeof(double));
-        ptr_B = (double *) malloc(n * n * sizeof(double));
         ptr_C = (double *) malloc(n * n * sizeof(double));
         ptr_C_check = (double *) malloc(n * n * sizeof(double));
 
@@ -79,11 +79,8 @@ int main(int args, char *argsv[]) {
     }
     
     ptr_A_tile = (double *) malloc(bfrsize * sizeof(double));
-    ptr_B_tile = (double *) malloc(bfrsize * sizeof(double));
+    //ptr_B_tile = (double *) malloc(bfrsize * sizeof(double));
     ptr_C_result = (double *) malloc(bfrsize * sizeof(double));
-
-    MPI_Scatterv(ptr_A, slices, offsets, MPI_DOUBLE, ptr_A_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Scatterv(ptr_B, slices, offsets, MPI_DOUBLE, ptr_B_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     double runtime;
     struct timeval tv1, tv2;
@@ -93,7 +90,9 @@ int main(int args, char *argsv[]) {
     for (int i = 0; i < 10; i++) {
         MPI_Barrier(MPI_COMM_WORLD);
         gettimeofday(&tv1, NULL);
-        matmul_mpi(ptr_A_tile, ptr_B_tile, ptr_C_result, rows, n);
+        MPI_Scatterv(ptr_A, slices, offsets, MPI_DOUBLE, ptr_A_tile, bfrsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(ptr_B, n*n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        matmul_mpi(ptr_A_tile, ptr_B, ptr_C_result, rows, n);
         MPI_Gatherv(ptr_C_result, bfrsize, MPI_DOUBLE, ptr_C, slices, offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         if(rank == 0 && n - (rows * size) != 0) {
             matmul_mpi(ptr_A + (rows * size), ptr_B + (rows * size), ptr_C + (rows * size), n - (rows * size), n);
@@ -102,22 +101,41 @@ int main(int args, char *argsv[]) {
 
         if (rank == 0 && !results_correct(ptr_C, ptr_C_check, n)) {
             printf("Incorrect\n");
+            /*for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    printf("%f\t", ptr_C[n*i + j]);
+                }
+                printf("\n");
+            }
+
+            printf("\n");
+            printf("\n");
+
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    printf("%f\t", ptr_C_check[n*i + j]);
+                }
+                printf("\n");
+            }*/
+
+            return 1;
         }
 
         runtime = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
         if (rank == 0) printf("%f,", runtime);
 
-        memset(ptr_C, 0, n*n * sizeof(double));
+        memset(ptr_C_result, 0, bfrsize * sizeof(double));
+        if (rank == 0) memset(ptr_C, 0, n*n * sizeof(double));
     }
 
     if (rank == 0) {
         free(ptr_A);
-        free(ptr_B);
+        //free(ptr_B);
         free(ptr_C);
         free(ptr_C_check);
     }
     free(ptr_A_tile);
-    free(ptr_B_tile);
+    free(ptr_B);
     free(ptr_C_result);
 
     MPI_Finalize();
