@@ -95,7 +95,7 @@ int main(int args, char *argsv[]) {
         matmul_mpi(ptr_A_tile, ptr_B, ptr_C_result, rows, n);
         MPI_Gatherv(ptr_C_result, bfrsize, MPI_DOUBLE, ptr_C, slices, offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         if(rank == 0 && n - (rows * size) != 0) {
-            matmul_mpi(ptr_A + (rows * size), ptr_B + (rows * size), ptr_C + (rows * size), n - (rows * size), n);
+            matmul_mpi(ptr_A + (n * rows * size), ptr_B, ptr_C + (n * rows * size), n % size, n);
         }
         gettimeofday(&tv2, NULL);
 
