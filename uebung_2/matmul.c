@@ -155,6 +155,17 @@ void matmul_constants(double *A, double *B, double *C, int n) {
     }
 }
 
+void matmul_omp(double* A, double* B, double* C, int n){
+#pragma omp parallel num_threads(4)
+    {
+        #pragma omp for schedule(static,16)
+        for (int i = 0; i < n; i++)
+            for (int k = 0; k < n; k++)
+                for (int j = 0; j < n; j++)
+                    C[i * n + j] += A[i * n + k] * B[k * n + j];
+    }
+}
+
 int results_correct(double* A, double* B, int n){
     int correct = 1;
     for(int i = 0; i<n*n; i++){
@@ -258,6 +269,15 @@ int main(int args, char *argsv[]) {
         if(m==0 && n==16){
             if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 5: Ergebnis korrekt\n");
             else printf("Optimierung 5: Ergebnis nicht korrekt\n");
+        }
+
+        gettimeofday(&tv1, NULL);
+        matmul_omp(ptr_A, ptr_B, ptr_C, n);
+        gettimeofday(&tv2, NULL);
+        runtimes[4][m] = (double) (tv2.tv_usec - tv1.tv_usec) / 1000 + 1000 * (double) (tv2.tv_sec - tv1.tv_sec);
+        if(m==0 && n==16){
+            if(results_correct(ptr_C_ref, ptr_C, n)) printf("Optimierung 6: Ergebnis korrekt\n");
+            else printf("Optimierung 6: Ergebnis nicht korrekt\n");
         }
 
     }
