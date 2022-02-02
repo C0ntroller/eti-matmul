@@ -98,10 +98,11 @@ int main(int args, char *argsv[]) {
             matmul_mpi(ptr_A + (n * rows * size), ptr_B, ptr_C + (n * rows * size), n % size, n);
         }
         gettimeofday(&tv2, NULL);
+        MPI_Barrier(MPI_COMM_WORLD);
 
         if (rank == 0 && !results_correct(ptr_C, ptr_C_check, n)) {
             printf("Incorrect\n");
-            /*for (int i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     printf("%f\t", ptr_C[n*i + j]);
                 }
@@ -116,7 +117,7 @@ int main(int args, char *argsv[]) {
                     printf("%f\t", ptr_C_check[n*i + j]);
                 }
                 printf("\n");
-            }*/
+            }
 
             return 1;
         }
