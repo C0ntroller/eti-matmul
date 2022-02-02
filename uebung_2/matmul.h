@@ -14,5 +14,7 @@ void matmul_pointer(double* A, double* B, double* C, int n);
 
 void matmul_constants(double* A, double* B, double* C, int n);
 
+void matmul_omp(double* A, double* B, double* C, int n);
+
 
 #endif //UE_MATMUL_H
