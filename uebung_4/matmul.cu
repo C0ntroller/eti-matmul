@@ -24,7 +24,7 @@ void matmul_cpu(double *A, double *B, double *C, int n) {
 
 int results_correct(double* A, double* B, int n){
     for(int i = 0; i<n*n; i++){
-        if((*(A+i) - *(B+i)) > 0.0001){
+        if(fabs(*(A+i) - *(B+i)) > 0.0001){
             return 0;
         }
     }
@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
     for(int i = 0; i<10; i++) {
 
         HANDLE_ERROR(cudaDeviceSynchronize());
+        HANDLE_ERROR(cudaMemset(C, 0, n * n * sizeof(double)));
 
         HANDLE_ERROR(cudaEventRecord(cstart, cstream));
 
@@ -114,7 +115,6 @@ int main(int argc, char **argv) {
         HANDLE_ERROR(cudaEventElapsedTime(&runtime, cstart, cend));
         printf("%f,", runtime);
 
-        HANDLE_ERROR(cudaMemset(C, 0, n * n * sizeof(double)));
     }
 
     printf("\n");
